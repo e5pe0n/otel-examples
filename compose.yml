@@ -1,0 +1,11 @@
+services:
+  requester:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: requester
+    restart: always
+    environment:
+      - TRACING_COLLECTOR_HOST=alloy
+      - TRACING_COLLECTOR_PORT=4317
+      - OTEL_EXPORTER_OTLP_TRACES_INSECURE=true
