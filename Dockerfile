@@ -7,8 +7,15 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm deploy --legacy --filter=express /prod/express
 RUN pnpm deploy --legacy --filter=requester /prod/requester
 RUN pnpm deploy --legacy --filter=server /prod/server
+
+FROM base AS express
+COPY --from=build /prod/express /prod/express
+WORKDIR /prod/express
+EXPOSE 3030
+CMD [ "pnpm", "start" ]
 
 FROM base AS requester
 COPY --from=build /prod/requester /prod/requester

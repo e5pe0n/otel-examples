@@ -65,6 +65,9 @@ importers:
       '@opentelemetry/core':
         specifier: 'catalog:'
         version: 2.0.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/exporter-prometheus':
+        specifier: 0.202.0
+        version: 0.202.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/exporter-trace-otlp-grpc':
         specifier: 'catalog:'
         version: 0.202.0(@opentelemetry/api@1.9.0)
@@ -86,6 +89,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: 'catalog:'
         version: 1.34.0
+      dotenv:
+        specifier: 16.5.0
+        version: 16.5.0
       dotenv-cli:
         specifier: 'catalog:'
         version: 8.0.0
