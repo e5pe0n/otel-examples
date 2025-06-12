@@ -21,9 +21,13 @@ services:
       - OTEL_METRICS_EXPORTER=prometheus
       - OTEL_METRICS_EXPORTER_PORT=9464
       - OTEL_TRACES_EXPORTER=otlp
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318/v1/traces
     ports:
       - "3030:3030"
+    depends_on:
+      - prometheus
+      - tempo
 
   prometheus:
     image: prom/prometheus:latest
@@ -36,8 +40,6 @@ services:
       - --enable-feature=native-histograms
     ports:
       - "9090:9090"
-    depends_on:
-      - express
 
   # Tempo runs as user 10001, and docker compose creates the volume as root.
   # As such, we need to chown the volume in order for Tempo to start correctly.
@@ -63,7 +65,6 @@ services:
       - "4318:4318"
     depends_on:
       - init
-      - express
 
   grafana:
     image: grafana/grafana:latest

@@ -1,8 +1,9 @@
 import "dotenv/config";
 import express from "express";
-import { NodeSDK } from "@opentelemetry/sdk-node";
+import { api, NodeSDK } from "@opentelemetry/sdk-node";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
+// import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import {
   detectResources,
   resourceFromAttributes,
@@ -13,6 +14,7 @@ import {
 } from "@opentelemetry/semantic-conventions";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import http from "node:http";
 
 const metricsExporter = new PrometheusExporter(
   {
@@ -39,7 +41,6 @@ const resource = resourceFromAttributes({
 const sdk = new NodeSDK({
   resource,
   traceExporter,
-  spanProcessors: [new SimpleSpanProcessor(traceExporter)],
   metricReader: metricsExporter,
   instrumentations: [
     getNodeAutoInstrumentations({
@@ -72,6 +73,38 @@ function getRandomNumber(min: number, max: number) {
 
 app.get("/rolldice", (req, res) => {
   res.send(getRandomNumber(1, 6).toString());
+});
+
+// Add this function to create a manual trace for testing
+app.get("/test-trace", async (req, res) => {
+  const tracer = api.trace.getTracer("test-tracer");
+  const span = tracer.startSpan("test-operation");
+  console.log("Created test span");
+
+  // Do something
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  span.end();
+  console.log("Ended test span");
+  res.send("Test trace created");
+});
+
+app.get("/test-tempo-connection", (req, res) => {
+  http
+    .get(`${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}/health`, (response) => {
+      let data = "";
+      response.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      response.on("end", () => {
+        res.send(`Tempo connection test: ${response.statusCode} - ${data}`);
+      });
+    })
+    .on("error", (err) => {
+      console.error(`Error connecting to Tempo: ${err.message}`);
+      res.status(500).send(`Error connecting to Tempo: ${err.message}`);
+    });
 });
 
 app.listen(port, () => {
