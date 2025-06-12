@@ -2,7 +2,17 @@ import "dotenv/config";
 import express from "express";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
+import {
+  detectResources,
+  resourceFromAttributes,
+} from "@opentelemetry/resources";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from "@opentelemetry/semantic-conventions";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 const metricsExporter = new PrometheusExporter(
   {
@@ -12,7 +22,24 @@ const metricsExporter = new PrometheusExporter(
     console.log("Prometheus scrape endpoint: http://localhost:9464/metrics");
   },
 );
+
+// Create OTLP trace exporter
+const traceExporter = new OTLPTraceExporter({
+  url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT}`,
+});
+
+const detected = detectResources();
+
+// Create a Resource that identifies your service
+const resource = resourceFromAttributes({
+  [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || "express",
+  [ATTR_SERVICE_VERSION]: "1.0.0",
+}).merge(detected);
+
 const sdk = new NodeSDK({
+  resource,
+  traceExporter,
+  spanProcessors: [new SimpleSpanProcessor(traceExporter)],
   metricReader: metricsExporter,
   instrumentations: [
     getNodeAutoInstrumentations({
