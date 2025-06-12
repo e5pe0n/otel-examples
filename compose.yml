@@ -4,6 +4,15 @@ services:
       context: .
       dockerfile: Dockerfile
       target: express
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/express
+          target: ./prod/express
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./apps/express/package.json
     env_file:
       - ./apps/express/.env
     restart: always

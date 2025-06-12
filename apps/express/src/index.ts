@@ -14,7 +14,25 @@ const metricsExporter = new PrometheusExporter(
 );
 const sdk = new NodeSDK({
   metricReader: metricsExporter,
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      "@opentelemetry/instrumentation-express": {
+        enabled: true,
+      },
+      "@opentelemetry/instrumentation-fs": {
+        enabled: true,
+      },
+      "@opentelemetry/instrumentation-http": {
+        enabled: true,
+      },
+      "@opentelemetry/instrumentation-net": {
+        enabled: true,
+      },
+      "@opentelemetry/instrumentation-runtime-node": {
+        enabled: true,
+      },
+    }),
+  ],
 });
 sdk.start();
 

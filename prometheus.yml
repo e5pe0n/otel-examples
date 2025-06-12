@@ -4,4 +4,4 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - localhost:9464
+          - express:9464
